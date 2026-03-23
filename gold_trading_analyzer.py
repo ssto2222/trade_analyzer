@@ -362,8 +362,8 @@ def main():
                 ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"], index=4)
             mt5_bars = st.slider("取得バー数", 100, 2000, 500, 50)
 
-        yf_period = "6mo"
-        yf_interval = "1d"
+        yf_period = "1mo"
+        yf_interval = "5m"
         if data_source == "📊 yfinance (GC=F)":
             yf_period = st.selectbox("期間", ["1mo", "3mo", "6mo", "1y", "2y"], index=2)
             yf_interval = st.selectbox("間隔", ["1d", "1h", "5m"], index=0,
