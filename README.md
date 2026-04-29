@@ -1,49 +1,60 @@
-# 🥇 Gold Trading Signal Analyzer
-## XAU/USD MA × RSI 売買シグナル分析ダッシュボード
+# 📊 Trade Signal Dashboard
 
-Exness MT5 / yfinance 対応の Streamlit ベース・ゴールドトレーディング分析ツール
+1H RSI(14) を軸にした**エントリーNG判定 & シグナル表示**Webアプリ。
+
+12,080件のトレード履歴（2020-07〜2026-04）を分析し、
+RSI帯域・時間帯・曜日ごとの禁止ゾーンをバックテスト由来のルールで可視化します。
 
 ---
 
-## 🚀 クイックスタート
+## 🚀 ローカル起動
 
 ```bash
-# 1. パッケージインストール
 pip install -r requirements.txt
-
-# 2. (Windows + MT5 の場合のみ)
-pip install MetaTrader5
-
-# 3. 起動
-streamlit run gold_trading_analyzer.py
+streamlit run app.py
 ```
 
-## 📡 データソース
+## 📁 ファイル構成
 
-| ソース | OS | 説明 |
-|--------|-----|------|
-| 🎮 デモデータ | 全OS | シミュレーション価格 (インストール不要) |
-| 📊 yfinance | 全OS | Yahoo Finance の金先物 (GC=F) |
-| 🔗 Exness MT5 | Windows | MT5ターミナル経由リアルタイム |
+```
+trade-signal-app/
+├── app.py            # Streamlit メインアプリ
+├── analysis.py       # RSI計算・シグナル判定ロジック
+├── requirements.txt
+└── .streamlit/
+    └── config.toml   # ダークテーマ設定
+```
 
-## 📈 分析機能
+## 📋 判定ルール概要
 
-- **移動平均線 (SMA / EMA)**: 短期・長期のクロスオーバー検出
-- **RSI**: 買われすぎ・売られすぎゾーン検出
-- **ボリンジャーバンド**: 価格の偏差分析
-- **MACD**: モメンタム分析
-- **シグナル検出**: GC/DC + RSI の複合判定
-- **簡易バックテスト**: シグナルベースの損益シミュレーション
-- **CSVエクスポート**: データ・シグナルのダウンロード
+### RSIゾーン（1H RSI14）
 
-## ⚙️ Exness MT5 接続手順
+| 銘柄 | 禁止ゾーン | 優良ゾーン |
+|------|----------|----------|
+| BTCUSD | 40〜55、65〜70 | 60〜65、70〜75、>80 |
+| XAUUSD | <35、40〜50、>80 | 55〜80 |
 
-1. Exness でアカウント作成
-2. MT5 ターミナルをダウンロード・起動
-3. `pip install MetaTrader5`
-4. サイドバーで「Exness MT5」を選択
-5. ログイン情報を入力して接続
+### 時間帯（JST）
 
-## ⚠️ 免責事項
+| 判定 | 時間帯 |
+|------|--------|
+| 🔴 禁止 | 6時・16時・18時 |
+| 🟡 注意 | 9時・16時・21時 |
 
-本ツールは学習・参考目的です。投資判断はご自身の責任で行ってください。
+### 曜日
+
+| 判定 | 曜日 |
+|------|------|
+| 🔴 禁止 | 土曜 |
+| 🟡 注意 | 金曜・木曜 |
+
+## ☁️ Streamlit Cloud デプロイ
+
+1. このリポジトリをGitHubにpush
+2. [share.streamlit.io](https://share.streamlit.io) でリポジトリを選択
+3. Main file: `app.py` を指定してデプロイ
+
+---
+
+> データソース: MT5トレード履歴 CSV（12,080件）  
+> 分析期間: 2020-07 〜 2026-04
