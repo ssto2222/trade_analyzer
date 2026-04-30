@@ -2,6 +2,7 @@
 app.py  —  Trade Signal Dashboard v2.0  (H1 + D1 RSI)
 """
 import datetime
+import time
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -61,11 +62,6 @@ st.markdown("""
 
 # ─── 定数 ────────────────────────────────────────────────────
 SUPPORTED_SYMBOLS = ["BTCUSD", "XAUUSD"]
-
-
-@st.cache_data(ttl=300)
-def _cached_fetch_rsi(symbol: str) -> tuple:
-    return fetch_rsi_yfinance(symbol)
 DOW_NAMES = ["月","火","水","木","金","土","日"]
 VERDICT_COLOR = {
     "forbidden":"#f85149","caution":"#e3b341","ok":"#3fb950","good":"#58d68d","best":"#a371f7"
@@ -267,10 +263,22 @@ def main():
         direction = st.radio("方向", ["buy","sell"], horizontal=True)
         st.markdown("---")
 
-        if st.button("🔄 yfinanceから自動取得", use_container_width=True):
+        auto_refresh = st.checkbox("🔁 3分ごとに自動更新", value=False, key="auto_refresh")
+
+        # タイマー発火による自動取得
+        if st.session_state.pop("_auto_rerun", False):
+            with st.spinner("RSI を自動更新中..."):
+                try:
+                    h1_val, d1_val = fetch_rsi_yfinance(symbol)
+                    st.session_state["h1"] = float(np.clip(h1_val, 0.0, 100.0))
+                    st.session_state["d1"] = float(np.clip(d1_val, 0.0, 100.0))
+                except Exception as exc:
+                    st.warning(f"自動更新失敗: {exc}")
+
+        if st.button("🔄 今すぐ取得", use_container_width=True):
             with st.spinner("RSI を取得中..."):
                 try:
-                    h1_val, d1_val = _cached_fetch_rsi.clear() or _cached_fetch_rsi(symbol)
+                    h1_val, d1_val = fetch_rsi_yfinance(symbol)
                     st.session_state["h1"] = float(np.clip(h1_val, 0.0, 100.0))
                     st.session_state["d1"] = float(np.clip(d1_val, 0.0, 100.0))
                     st.success(f"H1 RSI: {h1_val:.1f}  /  D1 RSI: {d1_val:.1f}")
@@ -429,6 +437,16 @@ def main():
         st.error("D1 RSI 35〜50 (XAU)")
         st.error("BTC: D1>70 × H1 40〜60")
         st.warning("土曜 / JST 6・16・18時")
+
+    # ── 自動更新カウントダウン
+    if auto_refresh:
+        ph = st.sidebar.empty()
+        for remaining in range(180, 0, -5):
+            ph.caption(f"🔁 次回更新まで {remaining} 秒")
+            time.sleep(5)
+        ph.empty()
+        st.session_state["_auto_rerun"] = True
+        st.rerun()
 
 
 if __name__ == "__main__":
