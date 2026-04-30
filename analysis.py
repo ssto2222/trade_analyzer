@@ -13,7 +13,7 @@ import pandas as pd
 
 YFINANCE_TICKERS = {
     "BTCUSD": "BTC-USD",
-    "XAUUSD": "GC=F",
+    "XAUUSD": "XAUUSD=X",   # スポット金（GC=F 先物より1h データが安定）
 }
 
 
@@ -31,25 +31,35 @@ def calc_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
 
 def fetch_rsi_yfinance(symbol: str) -> tuple:
     """yfinance から H1・D1 の最新 RSI(14) を取得。(rsi_h1, rsi_d1) を返す。"""
-    import inspect
+    import time as _time
     import yfinance as yf
+
     ticker = YFINANCE_TICKERS.get(symbol, symbol)
 
-    # yfinance 0.2.x+ の multi_level_index パラメータが使えれば無効化してフラットな列にする
-    dl_kw: dict = {"progress": False}
-    if "multi_level_index" in inspect.signature(yf.download).parameters:
-        dl_kw["multi_level_index"] = False
+    def _fetch(tkr: str, period: str, interval: str) -> pd.DataFrame:
+        # Ticker.history() は download() より MultiIndex を生成せず安定している
+        # 最大3回リトライ（指数バックオフ: 1s, 2s, 4s）
+        last_exc: Exception = RuntimeError("不明なエラー")
+        for attempt in range(3):
+            try:
+                df = yf.Ticker(tkr).history(
+                    period=period, interval=interval,
+                    auto_adjust=True, raise_errors=True,
+                )
+                if not df.empty:
+                    return df
+                last_exc = RuntimeError("空のデータが返されました")
+            except Exception as exc:
+                last_exc = exc
+            if attempt < 2:
+                _time.sleep(2 ** attempt)
+        raise RuntimeError(f"{tkr} ({interval}) 取得失敗: {last_exc}")
 
-    h1_df = yf.download(ticker, period="1mo", interval="1h", **dl_kw)
-    d1_df = yf.download(ticker, period="6mo", interval="1d", **dl_kw)
+    h1_df = _fetch(ticker, "1mo", "1h")
+    d1_df = _fetch(ticker, "6mo", "1d")
 
     def _last_rsi(df: pd.DataFrame, label: str) -> float:
-        if df.empty:
-            raise RuntimeError(f"{label} データが空です（接続エラーまたはレート制限の可能性）")
-        close = df["Close"]
-        if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
-        close = close.squeeze().dropna()
+        close = df["Close"].dropna()
         if len(close) < 15:
             raise RuntimeError(f"{label} データ件数不足: {len(close)} 件（最低15件必要）")
         rsi = calc_rsi(close).dropna()
