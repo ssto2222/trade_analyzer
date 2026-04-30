@@ -31,19 +31,33 @@ def calc_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
 
 def fetch_rsi_yfinance(symbol: str) -> tuple:
     """yfinance から H1・D1 の最新 RSI(14) を取得。(rsi_h1, rsi_d1) を返す。"""
+    import inspect
     import yfinance as yf
     ticker = YFINANCE_TICKERS.get(symbol, symbol)
 
-    h1_df = yf.download(ticker, period="30d",  interval="1h", progress=False)
-    d1_df = yf.download(ticker, period="6mo",  interval="1d", progress=False)
+    # yfinance 0.2.x+ の multi_level_index パラメータが使えれば無効化してフラットな列にする
+    dl_kw: dict = {"progress": False}
+    if "multi_level_index" in inspect.signature(yf.download).parameters:
+        dl_kw["multi_level_index"] = False
 
-    def _last_rsi(df: pd.DataFrame) -> float:
-        close = df["Close"].squeeze()
+    h1_df = yf.download(ticker, period="1mo", interval="1h", **dl_kw)
+    d1_df = yf.download(ticker, period="6mo", interval="1d", **dl_kw)
+
+    def _last_rsi(df: pd.DataFrame, label: str) -> float:
+        if df.empty:
+            raise RuntimeError(f"{label} データが空です（接続エラーまたはレート制限の可能性）")
+        close = df["Close"]
         if isinstance(close, pd.DataFrame):
             close = close.iloc[:, 0]
-        return round(float(calc_rsi(close).dropna().iloc[-1]), 1)
+        close = close.squeeze().dropna()
+        if len(close) < 15:
+            raise RuntimeError(f"{label} データ件数不足: {len(close)} 件（最低15件必要）")
+        rsi = calc_rsi(close).dropna()
+        if rsi.empty:
+            raise RuntimeError(f"{label} RSI が計算できませんでした")
+        return round(float(rsi.iloc[-1]), 1)
 
-    return _last_rsi(h1_df), _last_rsi(d1_df)
+    return _last_rsi(h1_df, "H1"), _last_rsi(d1_df, "D1")
 
 
 # ─── 2. H1 ゾーン定義 ────────────────────────────────────────
