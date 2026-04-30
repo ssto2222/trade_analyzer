@@ -9,6 +9,14 @@ import numpy as np
 import pandas as pd
 
 
+# ─── 0. yfinance ティッカー対応表 ────────────────────────────
+
+YFINANCE_TICKERS = {
+    "BTCUSD": "BTC-USD",
+    "XAUUSD": "GC=F",
+}
+
+
 # ─── 1. RSI 計算 ──────────────────────────────────────────────
 
 def calc_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
@@ -19,6 +27,23 @@ def calc_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     avg_loss = loss.ewm(com=period - 1, min_periods=period).mean()
     rs       = avg_gain / avg_loss.replace(0, np.nan)
     return 100 - 100 / (1 + rs)
+
+
+def fetch_rsi_yfinance(symbol: str) -> tuple:
+    """yfinance から H1・D1 の最新 RSI(14) を取得。(rsi_h1, rsi_d1) を返す。"""
+    import yfinance as yf
+    ticker = YFINANCE_TICKERS.get(symbol, symbol)
+
+    h1_df = yf.download(ticker, period="30d",  interval="1h", progress=False)
+    d1_df = yf.download(ticker, period="6mo",  interval="1d", progress=False)
+
+    def _last_rsi(df: pd.DataFrame) -> float:
+        close = df["Close"].squeeze()
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        return round(float(calc_rsi(close).dropna().iloc[-1]), 1)
+
+    return _last_rsi(h1_df), _last_rsi(d1_df)
 
 
 # ─── 2. H1 ゾーン定義 ────────────────────────────────────────
