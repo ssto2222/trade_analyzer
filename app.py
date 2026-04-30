@@ -15,6 +15,7 @@ from analysis import (
     HOUR_FORBIDDEN_UTC, HOUR_CAUTION_UTC,
     DOW_FORBIDDEN, DOW_CAUTION,
     _cross_bucket,
+    fetch_rsi_yfinance,
 )
 
 # ─── ページ設定 ──────────────────────────────────────────────
@@ -60,6 +61,11 @@ st.markdown("""
 
 # ─── 定数 ────────────────────────────────────────────────────
 SUPPORTED_SYMBOLS = ["BTCUSD", "XAUUSD"]
+
+
+@st.cache_data(ttl=300)
+def _cached_fetch_rsi(symbol: str) -> tuple:
+    return fetch_rsi_yfinance(symbol)
 DOW_NAMES = ["月","火","水","木","金","土","日"]
 VERDICT_COLOR = {
     "forbidden":"#f85149","caution":"#e3b341","ok":"#3fb950","good":"#58d68d","best":"#a371f7"
@@ -260,6 +266,16 @@ def main():
         symbol    = st.selectbox("銘柄", SUPPORTED_SYMBOLS)
         direction = st.radio("方向", ["buy","sell"], horizontal=True)
         st.markdown("---")
+
+        if st.button("🔄 yfinanceから自動取得", use_container_width=True):
+            with st.spinner("RSI を取得中..."):
+                try:
+                    h1_val, d1_val = _cached_fetch_rsi.clear() or _cached_fetch_rsi(symbol)
+                    st.session_state["h1"] = float(np.clip(h1_val, 0.0, 100.0))
+                    st.session_state["d1"] = float(np.clip(d1_val, 0.0, 100.0))
+                    st.success(f"H1 RSI: {h1_val:.1f}  /  D1 RSI: {d1_val:.1f}")
+                except Exception as exc:
+                    st.error(f"取得失敗: {exc}")
 
         st.markdown("**H1 RSI(14) — 1時間足**")
         rsi_h1 = st.slider("H1 RSI", 0.0, 100.0, 65.0, 0.5, key="h1")
