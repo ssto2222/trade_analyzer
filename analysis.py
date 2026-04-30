@@ -127,7 +127,7 @@ _D1_ZONE_DATA = {
         "45-50": {"wr":48,  "avg_profit":6040,  "verdict":"ok"},
         "50-55": {"wr":47,  "avg_profit":774,   "verdict":"ok"},
         "55-60": {"wr":42,  "avg_profit":-850,  "verdict":"forbidden"},
-        "60-65": {"wr":56,  "avg_profit":-2229, "verdict":"forbidden"},
+        "60-65": {"wr":56,  "avg_profit":-2229, "verdict":"ok"},       # 研究: D1≥60で十分 (+40%件数, EV同等)
         "65-70": {"wr":56,  "avg_profit":443,   "verdict":"ok"},
         "70-75": {"wr":49,  "avg_profit":976,   "verdict":"ok"},
         "75-80": {"wr":53,  "avg_profit":-1830, "verdict":"forbidden"},
