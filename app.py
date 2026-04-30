@@ -437,6 +437,7 @@ def main():
         st.error("D1 RSI 35〜50 (XAU)")
         st.error("BTC: D1>70 × H1 40〜60")
         st.warning("土曜 / JST 6・16・18時")
+        st.caption("BTC: D1 ≥ 60 で許容（≥ 70 不要）")
 
     # ── 自動更新カウントダウン
     if auto_refresh:
