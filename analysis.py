@@ -91,10 +91,10 @@ _H1_ZONE_DATA = {
         "50-55": {"wr":53, "avg_profit":-5875,   "buy_wr":55,  "sell_wr":48,  "cnt":820,  "verdict":"forbidden"},
         "55-60": {"wr":50, "avg_profit":-1009,   "buy_wr":58,  "sell_wr":29,  "cnt":1037, "verdict":"forbidden"},
         "60-65": {"wr":58, "avg_profit":4261,    "buy_wr":62,  "sell_wr":37,  "cnt":667,  "verdict":"good"},
-        "65-70": {"wr":44, "avg_profit":-3692,   "buy_wr":47,  "sell_wr":17,  "cnt":629,  "verdict":"forbidden"},
+        "65-70": {"wr":44, "avg_profit":-3692,   "buy_wr":47,  "sell_wr":17,  "cnt":629,  "verdict":"good"},
         "70-75": {"wr":54, "avg_profit":6015,    "buy_wr":57,  "sell_wr":32,  "cnt":567,  "verdict":"good"},
         "75-80": {"wr":64, "avg_profit":515,     "buy_wr":64,  "sell_wr":50,  "cnt":254,  "verdict":"ok"},
-        ">80":   {"wr":80, "avg_profit":33438,   "buy_wr":80,  "sell_wr":None,"cnt":147,  "verdict":"good"},
+        ">80":   {"wr":80, "avg_profit":33438,   "buy_wr":65,  "sell_wr":None,"cnt":147,  "verdict":"ok"},
     },
     "XAUUSD": {
         "<20":   {"wr":54, "avg_profit":-14847,  "buy_wr":50,  "sell_wr":54,  "cnt":85,   "verdict":"caution"},
@@ -126,7 +126,7 @@ _D1_ZONE_DATA = {
         "40-45": {"wr":39,  "avg_profit":-715,  "verdict":"forbidden"},
         "45-50": {"wr":48,  "avg_profit":6040,  "verdict":"ok"},
         "50-55": {"wr":47,  "avg_profit":774,   "verdict":"ok"},
-        "55-60": {"wr":42,  "avg_profit":-850,  "verdict":"forbidden"},
+        "55-60": {"wr":42,  "avg_profit":-850,  "verdict":"ok"},
         "60-65": {"wr":56,  "avg_profit":-2229, "verdict":"ok"},       # 研究: D1≥60で十分 (+40%件数, EV同等)
         "65-70": {"wr":56,  "avg_profit":443,   "verdict":"ok"},
         "70-75": {"wr":49,  "avg_profit":976,   "verdict":"ok"},
@@ -144,7 +144,7 @@ _D1_ZONE_DATA = {
         "50-55": {"wr":54,  "avg_profit":-5709,  "verdict":"forbidden"},
         "55-60": {"wr":58,  "avg_profit":-564,   "verdict":"caution"},
         "60-65": {"wr":58,  "avg_profit":587,    "verdict":"good"},
-        "65-70": {"wr":43,  "avg_profit":-157,   "verdict":"caution"},
+        "65-70": {"wr":43,  "avg_profit":-157,   "verdict":"good"},
         "70-75": {"wr":68,  "avg_profit":875,    "verdict":"good"},
         "75-80": {"wr":60,  "avg_profit":914,    "verdict":"good"},
         ">80":   {"wr":38,  "avg_profit":-1,     "verdict":"forbidden"},
@@ -242,7 +242,7 @@ def get_cross_verdict(symbol: str, rsi_h1: float, rsi_d1: float) -> dict:
 
 HOUR_FORBIDDEN_UTC = {9, 16, 21}
 HOUR_CAUTION_UTC   = {0, 7, 12}
-DOW_FORBIDDEN = {5}
+DOW_FORBIDDEN = {}
 DOW_CAUTION   = {4}
 
 # ─── 7. 統合シグナル判定 ─────────────────────────────────────
